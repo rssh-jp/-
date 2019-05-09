@@ -5,51 +5,69 @@ using UnityEngine;
 public class unit : MonoBehaviour
 {
     float velocity = 1f;
+    int count = 0;
+    Vector3 destination = new Vector3(0, 0, 0);
+
+    movable mov;
     // Start is called before the first frame update
     void Start()
     {
-        
+        mov = new movable();
     }
 
     // Update is called once per frame
     void Update()
     {
         //transform.Translate(0, 1f * Time.deltaTime, 0);
+        transform.Rotate(new Vector3(0, 0, 1), 1f);
         move();
     }
 
     void move()
     {
-        Vector3 vec = getTranslateValue(transform.position, new System.Numerics.Vector2(1.1f, 1.1f));
-        transform.Translate(vec);
+        switch (count)
+        {
+            case 100:
+                destination.Set(2f, 2f, 0);
+                break;
+            case 200:
+                destination.Set(-2f, -2f, 0);
+                break;
+            case 300:
+                destination.Set(2f, -2f, 0);
+                break;
+        }
+        Vector3 vec = getTranslateValue(transform.position, destination);
+        transform.Translate(vec, Space.World);
+
+        count++;
     }
 
-    Vector3 getTranslateValue(Vector3 position, System.Numerics.Vector2 point)
+    Vector3 getTranslateValue(Vector3 position, Vector3 point)
     {
+        Debug.Log("++++++++++++++++");
+        Debug.Log(string.Join(":", position.ToString(), point.ToString(), mov.ToString()));
         float vel = velocity * Time.deltaTime;
-        System.Numerics.Vector2 pos = new System.Numerics.Vector2(position.x, position.y);
-        System.Numerics.Vector2 vec = new System.Numerics.Vector2(point.X - pos.X, point.Y - pos.Y);
+        Vector2 pos = new Vector2(position.x, position.y);
+        Vector2 vec = new Vector2(point.x - pos.x, point.y - pos.y);
 
-        if(vec.Length() < vel)
+        if(Mathf.Abs(vec.magnitude) < vel)
         {
-            return new Vector3(vec.X, vec.Y, 0);
+            return new Vector3(vec.x, vec.y, 0);
         }
 
-        System.Numerics.Vector2 work = vec;
+        Vector2 work = vec;
 
-        vec = System.Numerics.Vector2.Normalize(vec);
+        vec.Normalize();
 
+        vec.x *= vel;
+        vec.y *= vel;
 
-        vec.X *= velocity * Time.deltaTime;
-        vec.Y *= velocity * Time.deltaTime;
-
-        if(vec.X >= work.X || vec.Y >= work.Y)
+        if(Mathf.Abs(vec.x) >= Mathf.Abs(work.x) || Mathf.Abs(vec.y) >= Mathf.Abs(work.y))
         {
             vec = work;
         }
 
-        Debug.Log(vec);
-        Debug.Log(position);
-        return new Vector3(vec.X, vec.Y, 0);
+        return new Vector3(vec.x, vec.y, 0);
     }
 }
