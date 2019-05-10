@@ -7,19 +7,19 @@ public class unit : MonoBehaviour
     float velocity = 1f;
     int count = 0;
     Vector3 destination = new Vector3(0, 0, 0);
+    float anglePerSecond = 90;
 
-    movable mov;
     // Start is called before the first frame update
     void Start()
     {
-        mov = new movable();
     }
 
     // Update is called once per frame
     void Update()
     {
         //transform.Translate(0, 1f * Time.deltaTime, 0);
-        transform.Rotate(new Vector3(0, 0, 1), 1f);
+        //transform.Rotate(new Vector3(0, 0, 1), 1f);
+        rotate();
         move();
     }
 
@@ -30,10 +30,10 @@ public class unit : MonoBehaviour
             case 100:
                 destination.Set(2f, 2f, 0);
                 break;
-            case 200:
+            case 300:
                 destination.Set(-2f, -2f, 0);
                 break;
-            case 300:
+            case 600:
                 destination.Set(2f, -2f, 0);
                 break;
         }
@@ -42,11 +42,45 @@ public class unit : MonoBehaviour
 
         count++;
     }
+    void rotate()
+    {
+        float angle = getRotateAngle(transform.localEulerAngles.z, 100);
+        Debug.Log(angle);
+        transform.Rotate(new Vector3(0, 0, 1), angle);
+    }
+
+    float getRotateAngle(float src, float dest)
+    {
+        float angle = dest - src;
+        bool isPlus = true;
+        if(angle > 180)
+        {
+            angle = Mathf.Abs(angle - 360);
+            isPlus = false;
+        }
+
+        if(angle >= anglePerSecond)
+        {
+            angle = anglePerSecond;
+        }
+
+        if (angle > 1)
+        {
+            angle = angle * Time.deltaTime;
+        }
+
+        if (isPlus)
+        {
+            return angle;
+        }
+        else
+        {
+            return -angle;
+        }
+    }
 
     Vector3 getTranslateValue(Vector3 position, Vector3 point)
     {
-        Debug.Log("++++++++++++++++");
-        Debug.Log(string.Join(":", position.ToString(), point.ToString(), mov.ToString()));
         float vel = velocity * Time.deltaTime;
         Vector2 pos = new Vector2(position.x, position.y);
         Vector2 vec = new Vector2(point.x - pos.x, point.y - pos.y);
