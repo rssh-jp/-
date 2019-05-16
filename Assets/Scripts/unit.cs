@@ -2,100 +2,100 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class unit : MonoBehaviour
+public class Unit : MonoBehaviour
 {
-    float velocity = 1f;
-    int count = 0;
+    static readonly Vector2 vecAngle0 = new Vector2(1, 0);
+
+    public float velocity = 1f;
+
+    public float anglePerSecond = 90;
+
     Vector3 destination = new Vector3(0, 0, 0);
-    float anglePerSecond = 90;
+    bool isMoving = false;
 
     // Start is called before the first frame update
     void Start()
     {
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //transform.Translate(0, 1f * Time.deltaTime, 0);
-        //transform.Rotate(new Vector3(0, 0, 1), 1f);
-        rotate();
-        move();
+        if (!isMoving)
+        {
+            Move(new Vector2(Random.Range(-2f, 2f), Random.Range(-3f, 3f)));
+            return;
+        }
+
+        moveTank();
     }
 
-    void move()
+    void moveTank()
     {
-        switch (count)
-        {
-            case 100:
-                destination.Set(2f, 2f, 0);
-                break;
-            case 300:
-                destination.Set(-2f, -2f, 0);
-                break;
-            case 600:
-                destination.Set(2f, -2f, 0);
-                break;
-        }
-        Vector3 vec = getTranslateValue(transform.position, destination);
-        transform.Translate(vec, Space.World);
+        Vector3 vec = destination - transform.position;
+        float angle = Vector3.Angle(vec, vecAngle0);
 
-        count++;
+        if(Vector3.Cross(vec.normalized, vecAngle0).z > 0)
+        {
+            angle = 360 - angle;
+        }
+
+        transform.Rotate(Vector3.forward, getRotateAngle(transform.localEulerAngles.z, angle));
+
+        if(Mathf.Abs(transform.localEulerAngles.z - angle) > 10)
+        {
+            return;
+        }
+
+        //move(destination);
+        transform.Translate(getTranslateValue(transform.position, destination), Space.World);
+
+        if(transform.position == destination)
+        {
+            isMoving = false;
+        }
     }
-    void rotate()
+
+    void moveCar()
     {
-        float angle = getRotateAngle(transform.localEulerAngles.z, 100);
-        Debug.Log(angle);
-        transform.Rotate(new Vector3(0, 0, 1), angle);
-    }
+        Vector3 vec = destination - transform.position;
+        float angle = Vector3.Angle(vec, vecAngle0);
 
-    float getRotateAngle(float src, float dest)
-    {
-        float angle = dest - src;
-        bool isPlus = true;
-        if(angle > 180)
+        if(Vector3.Cross(vec.normalized, vecAngle0).z > 0)
         {
-            angle = Mathf.Abs(angle - 360);
-            isPlus = false;
+            angle = 360 - angle;
         }
 
-        if(angle >= anglePerSecond)
+        transform.Rotate(Vector3.forward, getRotateAngle(transform.localEulerAngles.z, angle));
+
+        if(Mathf.Abs(transform.localEulerAngles.z - angle) > 10)
         {
-            angle = anglePerSecond;
+            return;
         }
 
-        if (angle > 1)
-        {
-            angle = angle * Time.deltaTime;
-        }
+        //move(destination);
+        transform.Translate(getTranslateValue(transform.position, destination), Space.World);
 
-        if (isPlus)
+        if(transform.position == destination)
         {
-            return angle;
-        }
-        else
-        {
-            return -angle;
+            isMoving = false;
         }
     }
 
-    Vector3 getTranslateValue(Vector3 position, Vector3 point)
+    Vector3 getTranslateValue(Vector3 pos, Vector3 point)
     {
         float vel = velocity * Time.deltaTime;
-        Vector2 pos = new Vector2(position.x, position.y);
-        Vector2 vec = new Vector2(point.x - pos.x, point.y - pos.y);
+
+        Vector3 vec = point - pos;// new Vector3(point.x - pos.x, point.y - pos.y);
 
         if(Mathf.Abs(vec.magnitude) < vel)
         {
             return new Vector3(vec.x, vec.y, 0);
         }
 
-        Vector2 work = vec;
+        Vector3 work = vec;
 
         vec.Normalize();
-
-        vec.x *= vel;
-        vec.y *= vel;
+        vec *= vel;
 
         if(Mathf.Abs(vec.x) >= Mathf.Abs(work.x) || Mathf.Abs(vec.y) >= Mathf.Abs(work.y))
         {
@@ -104,4 +104,36 @@ public class unit : MonoBehaviour
 
         return new Vector3(vec.x, vec.y, 0);
     }
+
+    float getRotateAngle(float src, float dest)
+    {
+        float angle = dest - src;
+        float signed = 1;
+
+        if(angle > 180)
+        {
+            angle = Mathf.Abs(angle - 360);
+            signed = -1;
+        }
+        else if(angle < 0)
+        {
+            angle = Mathf.Abs(angle);
+            signed = -1;
+        }
+
+        float ret = anglePerSecond * Time.deltaTime;
+        if (angle < ret)
+        {
+            ret = angle;
+        }
+
+        return ret * signed;
+    }
+
+    public void Move(Vector2 pos)
+    {
+        destination.Set(pos.x, pos.y, 0);
+        isMoving = true;
+    }
+
 }
